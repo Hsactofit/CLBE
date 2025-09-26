@@ -13,21 +13,22 @@ from app.models import (
     WageZipArea,
 )
 from app.models import DBSession
-from app.schemas import WageTierPublic
+from app.schemas import WageTierLevelPublic, WageTierPublic
 from app.documents.service import get_document_blob
 
 import logging
 from io import BytesIO
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfReader
 
 from app.wages.onet_classifier_service import onet_classifier_service
+from app.workflow.service import complete_workflow_step, complete_workflow_steps
 
 logger = logging.getLogger("uvicorn.error")
 
 
 async def get_tiers_from_current_project_state(
     *, db: DBSession, project: Project
-) -> str:
+) -> WageTierPublic:
     print("--> Getting tiers from current project state")
 
     # get the current response for the beneficiary zip code field in the I-129 form for the project
@@ -69,6 +70,17 @@ async def get_tiers_from_current_project_state(
 
     # finally get the tiers for the SOC code via db lookup
     tiers = await get_tiers_by_zip_and_soc(db=db, zip_code=zip_code, soc_code=soc_code)
+
+    # and mark the workflow steps as complete
+    await complete_workflow_steps(
+        db=db,
+        project=project,
+        workflow_step_keys=[
+            "H1B_WAGE_DETERMINATION",
+            "H1B_WAGE_DETERMINATION_ONET",
+            "H1B_WAGE_DETERMINATION_WAGE_TIERS",
+        ],
+    )
 
     return tiers
 
@@ -148,6 +160,7 @@ async def get_job_description_from_document_type(
         print("--> all_text", all_text)
 
         return all_text
+
     except Exception as e:
         logger.error(f"Error extracting text from PDF: {e}")
         return "Error: Could not extract text from PDF"
@@ -155,7 +168,7 @@ async def get_job_description_from_document_type(
 
 async def get_tiers_by_zip_and_soc(
     *, db: DBSession, zip_code: str, soc_code: str
-) -> list[WageTierPublic]:
+) -> WageTierPublic:
     row = (
         db.query(WageAreaJob, WageArea, WageJob)
         .join(WageArea, WageAreaJob.area_id == WageArea.id)
@@ -172,15 +185,19 @@ async def get_tiers_by_zip_and_soc(
 
     area_job, area, job = row
 
-    return [
-        WageTierPublic(
-            wage_tier_1=float(area_job.wage_tier_1),
-            wage_tier_2=float(area_job.wage_tier_2),
-            wage_tier_3=float(area_job.wage_tier_3),
-            wage_tier_4=float(area_job.wage_tier_4),
-            area_code=area.code,
-            area_name=area.name,
-            job_code=job.code,
-            job_name=job.name,
-        )
+    levels = [
+        WageTierLevelPublic(level=1, wage=float(area_job.wage_tier_1)),
+        WageTierLevelPublic(level=2, wage=float(area_job.wage_tier_2)),
+        WageTierLevelPublic(level=3, wage=float(area_job.wage_tier_3)),
+        WageTierLevelPublic(level=4, wage=float(area_job.wage_tier_4)),
     ]
+
+    return WageTierPublic(
+        levels=levels,
+        zip_code=zip_code,
+        area_code=area.code,
+        area_name=area.name,
+        job_code=job.code,
+        job_name=job.name,
+        job_description=job.description,
+    )
