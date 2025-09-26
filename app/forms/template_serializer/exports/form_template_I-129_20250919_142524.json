@@ -1,0 +1,137 @@
+{
+  "name": "I-129",
+  "description": "Petition for Nonimmigrant Worker (USCIS Form I-129). Focused seed of fields needed by app.",
+  "sections": [
+    {
+      "name": "Beneficiary_Information",
+      "fields": [
+        {
+          "key": "Beneficiary.Gender",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.SSN",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.USAddress.StreetNumberName",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.USAddress.City",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.USAddress.State",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.USAddress.ZIP",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.StreetNumberName",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.City",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.Province",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.PostalCode",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.Country",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.Dependents.HasDependents",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.OutsideUS",
+          "value": null
+        },
+        {
+          "key": "Beneficiary.Dependents.Count",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "Employer_Information",
+      "fields": [
+        {
+          "key": "Employer.Signatory.Title",
+          "value": null
+        },
+        {
+          "key": "Employer.Contact.DaytimePhone",
+          "value": null
+        },
+        {
+          "key": "Employer.Contact.MobilePhone",
+          "value": null
+        },
+        {
+          "key": "Employer.Contact.Email",
+          "value": null
+        },
+        {
+          "key": "Employer.EmployeeCount.TotalUS",
+          "value": null
+        },
+        {
+          "key": "Employer.EmployeeCount.H1B",
+          "value": null
+        },
+        {
+          "key": "Employer.POC.FamilyName",
+          "value": null
+        },
+        {
+          "key": "Employer.POC.GivenName",
+          "value": null
+        },
+        {
+          "key": "Employer.POC.MiddleName",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "Job_Information",
+      "fields": [
+        {
+          "key": "Job.Location.Address1.StreetNumberName",
+          "value": null
+        },
+        {
+          "key": "Job.Location.Address1.City",
+          "value": null
+        },
+        {
+          "key": "Job.Location.Address1.State",
+          "value": null
+        },
+        {
+          "key": "Job.Location.Address1.ZIP",
+          "value": null
+        },
+        {
+          "key": "Job.OffsiteWork",
+          "value": null
+        },
+        {
+          "key": "Job.Location.UseHomeAddress",
+          "value": null
+        }
+      ]
+    }
+  ]
+}

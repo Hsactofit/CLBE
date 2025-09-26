@@ -1,0 +1,240 @@
+{
+  "info": {
+    "name": "Backend PDF Tests",
+    "description": "Concise API test collection for projects and forms",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Get Project Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/types",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": ["{{base_url}}"],
+              "path": ["projects"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeId\": 1,\n  \"beneficiaryFirstName\": \"John\",\n  \"beneficiaryLastName\": \"Doe\",\n  \"positionTitle\": \"Software Engineer\",\n  \"filingType\": \"NEW_FILING\",\n  \"deadline\": \"2024-12-31\",\n  \"priority\": \"HIGH\",\n  \"premiumProcessing\": true,\n  \"notes\": \"Test project for H-1B application\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": ["{{base_url}}"],
+              "path": ["projects"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Project by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_public_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_public_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_public_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_public_id}}"]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Project-related API endpoints"
+    },
+    {
+      "name": "Forms",
+      "item": [
+        {
+          "name": "Get Project Forms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_public_id}}/forms",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_public_id}}", "forms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Form Sections",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_public_id}}/forms/{{form_public_id}}/sections",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_public_id}}", "forms", "{{form_public_id}}", "sections"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Section Fields",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_public_id}}/forms/{{form_public_id}}/sections/{{section_public_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_public_id}}", "forms", "{{form_public_id}}", "sections", "{{section_public_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Section Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": [\n    {\n      \"key\": \"Beneficiary.USAddress.City\",\n      \"value\": \"New York\",\n      \"role\": \"USER\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_public_id}}/forms/{{form_public_id}}/sections/{{section_public_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_public_id}}", "forms", "{{form_public_id}}", "sections", "{{section_public_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Form PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_public_id}}/forms/{{form_public_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_public_id}}", "forms", "{{form_public_id}}", "pdf"]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Form-related API endpoints"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set authentication header (if needed)",
+          "// pm.request.headers.add({",
+          "//   key: 'Authorization',",
+          "//   value: 'Bearer ' + pm.environment.get('access_token')",
+          "// });"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response tests",
+          "pm.test('Status code is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+          "});",
+          "",
+          "// For create project response, save project ID",
+          "if (pm.info.requestName === 'Create Project' && pm.response.code === 201) {",
+          "    const response = pm.response.json();",
+          "    pm.environment.set('project_public_id', response.publicId);",
+          "}",
+          "",
+          "// For get forms response, save form ID",
+          "if (pm.info.requestName === 'Get Project Forms' && pm.response.code === 200) {",
+          "    const response = pm.response.json();",
+          "    if (response.forms && response.forms.length > 0) {",
+          "        pm.environment.set('form_public_id', response.forms[0].publicId);",
+          "    }",
+          "}",
+          "",
+          "// For get form sections response, save section ID",
+          "if (pm.info.requestName === 'Get Form Sections' && pm.response.code === 200) {",
+          "    const response = pm.response.json();",
+          "    if (response.sections && response.sections.length > 0) {",
+          "        pm.environment.set('section_public_id', response.sections[0].publicId);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "project_public_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "form_public_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "section_public_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
