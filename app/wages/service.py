@@ -1,4 +1,9 @@
+from io import BytesIO
+import os
 from fastapi import HTTPException
+from pypdf import PdfReader
+from app.documents.service import get_document_blob
+from app.documents.storage import S3_BUCKET
 from app.models import (
     FormTemplate,
     FormTemplateField,
@@ -14,16 +19,15 @@ from app.models import (
 )
 from app.models import DBSession
 from app.schemas import WageTierLevelPublic, WageTierPublic
-from app.documents.service import get_document_blob
 
 import logging
-from io import BytesIO
-from pypdf import PdfReader
 
 from app.wages.onet_classifier_service import onet_classifier_service
-from app.workflow.service import complete_workflow_step, complete_workflow_steps
+from app.workflow.service import complete_workflow_steps
 
 logger = logging.getLogger("uvicorn.error")
+
+S3_STORAGE = os.getenv("S3_STORAGE")
 
 
 async def get_tiers_from_current_project_state(
@@ -44,23 +48,32 @@ async def get_tiers_from_current_project_state(
             status_code=404, detail="Beneficiary zip code field not found"
         )
 
-    # find the current job description document
-    job_description = await get_job_description_from_document_type(
-        db=db, project=project, document_type_code="employment_letter"
-    )
+    soc_code = None
 
-    # infer the SOC code from the job description first
-    soc_code = await onet_classifier_service.infer_soc_code_from_document(
-        job_description=job_description
-    )
+    if S3_STORAGE:
+        # find the current job description document
+        job_description_document = (
+            await get_job_description_document_from_document_type(
+                db=db, project=project, document_type_code="employment_letter"
+            )
+        )
 
-    print("--> soc_code", soc_code)
+        file_url = f"https://{S3_BUCKET}.s3.amazonaws.com/documents/{project.client.public_id}/{project.public_id}/uploads/{job_description_document.public_id}"
+        print("--> File url", file_url)
 
-    # correct suffixed SOC code - remove the last 3 characters if format is like "XX-XXXX.XX"
-    if len(soc_code) == 10 and soc_code[7] == ".":
-        soc_code = soc_code[:-3]  # Remove last 3 characters (.XX)
+        # infer the SOC code from the job description
+        soc_code = await onet_classifier_service.infer_soc_code_from_document(
+            file_url=file_url
+        )
+    else:
+        job_description = await get_job_description_from_document_type(
+            db=db, project=project, document_type_code="employment_letter"
+        )
+        soc_code = await onet_classifier_service.infer_soc_code_from_text(
+            job_description=job_description
+        )
 
-    print("--> corrected soc_code", soc_code)
+    print("--> Soc code", soc_code)
 
     if not soc_code:
         raise HTTPException(
@@ -68,10 +81,17 @@ async def get_tiers_from_current_project_state(
             detail="SOC code could not be inferred from employment letter",
         )
 
+    # correct suffixed SOC code - remove the last 3 characters if format is like "XX-XXXX.XX"
+    if len(soc_code) == 10 and soc_code[7] == ".":
+        soc_code = soc_code[:-3]  # Remove last 3 characters (.XX)
+
+    print("--> Corrected soc_code", soc_code)
+
     # finally get the tiers for the SOC code via db lookup
     tiers = await get_tiers_by_zip_and_soc(db=db, zip_code=zip_code, soc_code=soc_code)
 
     # and mark the workflow steps as complete
+    """
     await complete_workflow_steps(
         db=db,
         project=project,
@@ -81,6 +101,7 @@ async def get_tiers_from_current_project_state(
             "H1B_WAGE_DETERMINATION_WAGE_TIERS",
         ],
     )
+    """
 
     return tiers
 
@@ -107,12 +128,34 @@ async def get_zip_code_from_project_form(
         .first()
     )
 
-    print("--> zip_code_response", zip_code_response)
+    print("--> Zip code response", zip_code_response)
 
     if not zip_code_response:
         return None
 
     return zip_code_response.value
+
+
+async def get_job_description_document_from_document_type(
+    *, db: DBSession, project: Project, document_type_code: str
+) -> Document:
+    document = (
+        db.query(Document)
+        .join(DocumentType, Document.inferred_type_id == DocumentType.id)
+        .filter(
+            Document.project_id == project.id, DocumentType.code == document_type_code
+        )
+        .first()
+    )
+
+    print("--> Document", document)
+
+    if not document:
+        raise HTTPException(
+            status_code=404, detail="Employment letter document not found"
+        )
+
+    return document
 
 
 async def get_job_description_from_document_type(
@@ -127,7 +170,7 @@ async def get_job_description_from_document_type(
         .first()
     )
 
-    print("--> document", document)
+    print("--> Document", document)
 
     if not document:
         raise HTTPException(
@@ -157,7 +200,7 @@ async def get_job_description_from_document_type(
 
         all_text = text.strip()
 
-        print("--> all_text", all_text)
+        print("--> All text", all_text)
 
         return all_text
 

@@ -8,8 +8,6 @@ from app.models import (
     ProjectPriority,
 )
 import uuid
-from datetime import datetime
-from typing import Optional, List
 
 # ============================================================================
 # UTILS
@@ -50,8 +48,7 @@ class ClientPublic(CamelModel):
     public_id: uuid.UUID = Field(..., description="Client's public ID (UUID)")
     name: str = Field(..., description="Client/company name")
     created_at: datetime = Field(..., description="Client creation timestamp")
-    updated_at: datetime = Field(...,
-                                 description="Client last update timestamp")
+    updated_at: datetime = Field(..., description="Client last update timestamp")
 
 
 class ClientCreate(CamelModel):
@@ -71,12 +68,10 @@ class ClientCreate(CamelModel):
 
 
 class ClientCreateResponse(CamelModel):
-    client_public_id: uuid.UUID = Field(...,
-                                        description="Client's public ID (UUID)")
+    client_public_id: uuid.UUID = Field(..., description="Client's public ID (UUID)")
     client_name: str = Field(..., description="Client/company name")
     user_email: str | None = Field(None, description="User's email address")
-    user_public_id: uuid.UUID = Field(...,
-                                      description="User's public ID (UUID)")
+    user_public_id: uuid.UUID = Field(..., description="User's public ID (UUID)")
 
 
 class ClientCreateRequest(CamelModel):
@@ -105,18 +100,13 @@ class ClientCreateRequest(CamelModel):
 
 class ProjectCreate(CamelModel):
     type_id: int = Field(..., description="Project type ID")
-    beneficiary_first_name: str = Field(...,
-                                        description="Beneficiary first name")
-    beneficiary_last_name: str = Field(...,
-                                       description="Beneficiary last name")
+    beneficiary_first_name: str = Field(..., description="Beneficiary first name")
+    beneficiary_last_name: str = Field(..., description="Beneficiary last name")
     position_title: str | None = Field(None, description="Position title")
     filing_type: ProjectFilingType = Field(..., description="Filing type")
-    deadline: date | None = Field(
-        None, description="Project deadline (date-only)")
-    priority: ProjectPriority = Field(
-        ProjectPriority.MEDIUM, description="Priority")
-    premium_processing: bool | None = Field(
-        None, description="Premium processing")
+    deadline: date | None = Field(None, description="Project deadline (date-only)")
+    priority: ProjectPriority = Field(ProjectPriority.MEDIUM, description="Priority")
+    premium_processing: bool | None = Field(None, description="Premium processing")
     notes: str | None = Field(None, description="Case notes")
 
 
@@ -125,15 +115,13 @@ class ProjectTypePublic(CamelModel):
 
     id: int = Field(..., description="Project type ID")
     name: str = Field(..., description="Project type name")
-    description: str | None = Field(
-        None, description="Project type description")
+    description: str | None = Field(None, description="Project type description")
     sequence: int = Field(..., description="Project type sequence")
     enabled: bool = Field(..., description="Project type enabled")
 
 
 class ProjectTypesPublic(CamelModel):
-    types: list[ProjectTypePublic] = Field(...,
-                                           description="List of project types")
+    types: list[ProjectTypePublic] = Field(..., description="List of project types")
 
 
 class ProjectPublic(CamelModel):
@@ -141,22 +129,16 @@ class ProjectPublic(CamelModel):
 
     public_id: uuid.UUID = Field(..., description="Project's public ID (UUID)")
     type: ProjectTypePublic = Field(..., description="Project type")
-    beneficiary_first_name: str = Field(...,
-                                        description="Beneficiary first name")
-    beneficiary_last_name: str = Field(...,
-                                       description="Beneficiary last name")
+    beneficiary_first_name: str = Field(..., description="Beneficiary first name")
+    beneficiary_last_name: str = Field(..., description="Beneficiary last name")
     position_title: str | None = Field(None, description="Position title")
     filing_type: ProjectFilingType = Field(..., description="Filing type")
-    deadline: date | None = Field(
-        None, description="Project deadline (date-only)")
-    priority: ProjectPriority = Field(
-        ProjectPriority.MEDIUM, description="Priority")
-    premium_processing: bool | None = Field(
-        None, description="Premium processing")
+    deadline: date | None = Field(None, description="Project deadline (date-only)")
+    priority: ProjectPriority = Field(ProjectPriority.MEDIUM, description="Priority")
+    premium_processing: bool | None = Field(None, description="Premium processing")
     notes: str | None = Field(None, description="Case notes")
     started_at: datetime = Field(..., description="Project start timestamp")
-    updated_at: datetime = Field(...,
-                                 description="Project last update timestamp")
+    updated_at: datetime = Field(..., description="Project last update timestamp")
 
     completed: bool = Field(..., description="Project completion status")
 
@@ -170,8 +152,7 @@ class WorkflowStepPublic(CamelModel):
 
     id: int = Field(..., description="Workflow step ID")
     name: str = Field(..., description="Workflow step name")
-    description: str | None = Field(
-        None, description="Workflow step description")
+    description: str | None = Field(None, description="Workflow step description")
     key: str | None = Field(None, description="Workflow step key")
     is_active_step: bool = Field(
         ..., description="Whether this type is the current step"
@@ -190,8 +171,7 @@ class WorkflowStepPublic(CamelModel):
 
 
 class WorkflowStepsPublic(CamelModel):
-    steps: list[WorkflowStepPublic] = Field(...,
-                                            description="List of workflow steps")
+    steps: list[WorkflowStepPublic] = Field(..., description="List of workflow steps")
 
 
 # ============================================================================
@@ -203,10 +183,8 @@ class DocumentTypePublic(CamelModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(..., description="Document type name")
-    code: str = Field(...,
-                      description="Document type code, common to vision lambda")
-    description: str | None = Field(
-        None, description="Document type description")
+    code: str = Field(..., description="Document type code, common to vision lambda")
+    description: str | None = Field(None, description="Document type description")
     sequence: int = Field(..., description="Ordering sequence")
     required: bool = Field(..., description="Whether this type is required")
     created_at: datetime = Field(..., description="Creation timestamp")
@@ -214,19 +192,15 @@ class DocumentTypePublic(CamelModel):
 
 
 class DocumentTypesPublic(CamelModel):
-    types: list[DocumentTypePublic] = Field(...,
-                                            description="List of document types")
+    types: list[DocumentTypePublic] = Field(..., description="List of document types")
 
 
 class DocumentPublic(CamelModel):
     model_config = ConfigDict(from_attributes=True)
 
-    public_id: uuid.UUID = Field(...,
-                                 description="Document's public ID (UUID)")
-    created_at: datetime = Field(...,
-                                 description="Document creation timestamp")
-    updated_at: datetime = Field(...,
-                                 description="Document last update timestamp")
+    public_id: uuid.UUID = Field(..., description="Document's public ID (UUID)")
+    created_at: datetime = Field(..., description="Document creation timestamp")
+    updated_at: datetime = Field(..., description="Document last update timestamp")
     name: str = Field(..., description="Document name")
     content_type: str | None = Field(
         None, description="Document content type (e.g., application/pdf, image/jpeg)"
@@ -234,13 +208,11 @@ class DocumentPublic(CamelModel):
     inferred_type: DocumentTypePublic | None = Field(
         None, description="Resolved document type"
     )
-    extracted_data: dict | None = Field(
-        None, description="Document extracted data")
+    extracted_data: dict | None = Field(None, description="Document extracted data")
 
 
 class DocumentsPublic(CamelModel):
-    documents: list[DocumentPublic] = Field(...,
-                                            description="List of documents")
+    documents: list[DocumentPublic] = Field(..., description="List of documents")
 
 
 # ============================================================================
@@ -269,8 +241,7 @@ class SectionPublic(CamelModel):
     public_id: uuid.UUID = Field(..., description="Section's public ID (UUID)")
     sequence: int = Field(..., description="Section sequence")
     created_at: datetime = Field(..., description="Section creation timestamp")
-    updated_at: datetime = Field(...,
-                                 description="Section last update timestamp")
+    updated_at: datetime = Field(..., description="Section last update timestamp")
 
     name: str = Field(..., description="Section name")
 
@@ -299,8 +270,7 @@ class FieldPublic(CamelModel):
     sub_type: FormTemplateFieldSubTypes | None = Field(
         None, description="Field sub type"
     )
-    options: List[FieldOptionPublic] | None = Field(
-        None, description="Field options")
+    options: List[FieldOptionPublic] | None = Field(None, description="Field options")
     is_dependency_target: bool = False
 
 
@@ -312,8 +282,7 @@ class ResponsePublic(CamelModel):
 
 
 class ResponsesPublic(CamelModel):
-    fields: List[ResponsePublic] = Field(...,
-                                         description="List of field responses")
+    fields: List[ResponsePublic] = Field(..., description="List of field responses")
 
 
 class FieldsPublic(CamelModel):
@@ -347,17 +316,3 @@ class WageTierPublic(CamelModel):
     job_code: str | None = Field(None, description="SOC/OES code")
     job_name: str | None = Field(None, description="Job name")
     job_description: str | None = Field(None, description="Job description")
-
-
-class WorkflowStepPublic(CamelModel):
-    """Workflow step public schema"""
-    step_key: str = Field(..., description="Step identifier")
-    completed: bool = Field(..., description="Whether step is completed")
-    completed_at: Optional[datetime] = Field(
-        None, description="When step was completed")
-
-
-class WorkflowStepsPublic(CamelModel):
-    """Collection of workflow steps"""
-    steps: List[WorkflowStepPublic] = Field(...,
-                                            description="List of workflow steps")

@@ -23,7 +23,6 @@ from app.forms import cache
 from collections import defaultdict
 import uuid
 import logging
-from app.workflow import service as workflow_service
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -234,21 +233,6 @@ async def submit_section_responses(
                 db_field_response.role = request_field_response.role
 
         db.commit()
-        
-        # NEW: Evaluate workflow after successful form section submission
-        try:
-            await workflow_service.evaluate_after_form_submission(
-                db=db,
-                project=project,
-                form=form,
-                section=section
-            )
-            logger.info(f"Workflow evaluation completed after form submission")
-        except Exception as e:
-            logger.error(f"Workflow evaluation failed: {e}")
-            # Don't fail the form submission if workflow evaluation fails
-            pass
-        
         return {"message": "Section responses submitted successfully"}
 
     except Exception:

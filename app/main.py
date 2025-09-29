@@ -11,8 +11,7 @@ from app.wages.router import router as wages_router
 
 API_VERSION = "0.1.1"
 
-app = FastAPI(title="Crossing Legal AI API",
-              description="", version=API_VERSION)
+app = FastAPI(title="Crossing Legal AI API", description="", version=API_VERSION)
 
 app.add_middleware(ProxyHeadersMiddleware)
 
@@ -36,6 +35,11 @@ app.include_router(
     prefix="/projects/{project_public_id}/documents",
     tags=["documents"],
 )
+app.include_router(
+    workflow_router,
+    prefix="/projects/{project_public_id}/steps",
+    tags=["workflow"],
+)
 app.include_router(clients_router, prefix="/clients", tags=["clients"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(
@@ -43,7 +47,6 @@ app.include_router(
     prefix="/projects/{project_public_id}/wages",
     tags=["wages"],
 )
-app.include_router(workflow_router, prefix="/projects", tags=["workflow"])
 
 
 @app.get("/")

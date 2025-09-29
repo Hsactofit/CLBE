@@ -1,8 +1,12 @@
+import os
+import logging
 from fastapi import APIRouter, Depends, Query, HTTPException
 from app.auth.service import get_project_state
 from app.models import ProjectState
 from app.schemas import WageTierPublic
 from app.wages import service as wage_service
+
+logger = logging.getLogger("uvicorn.error")
 
 
 router = APIRouter()
@@ -21,7 +25,7 @@ async def get_tiers(
     return wage_tier_public
 
 
-@router.get("/", response_model=WageTierPublic)
+@router.get("", response_model=WageTierPublic)
 async def calculate_wage_tiers(
     project_state: ProjectState = Depends(get_project_state),
 ):

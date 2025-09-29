@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from app.auth.service import get_project_state
 from app.models import ProjectState
-from app.forms import cache
 from app.schemas import (
     FormsPublic,
     SectionsPublic,
@@ -137,79 +136,4 @@ async def download_form_pdf(
         logger.error(f"Failed to generate form PDF: {e}")
         raise HTTPException(
             status_code=500, detail=f"Failed to generate form PDF: {str(e)}"
-        )
-
-@router.post("/cache/clear")
-async def clear_cache():
-    """Clear all form template cache"""
-    try:
-        stats_before = cache.get_cache_stats()
-        cache.clear_cache()
-        stats_after = cache.get_cache_stats()
-        
-        return {
-            "message": "Form template cache cleared successfully",
-            "stats_before": stats_before,
-            "stats_after": stats_after
-        }
-    except Exception as e:
-        logger.error(f"Failed to clear cache: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to clear cache: {str(e)}"
-        )
-
-
-@router.post("/cache/sync")
-async def sync_cache():
-    """Clear cache and reload from database"""
-    try:
-        stats_before = cache.get_cache_stats()
-        
-        # Clear existing cache
-        cache.clear_cache()
-        
-        # Warm cache with all form templates
-        from app.database import SessionLocal
-        db = SessionLocal()
-        try:
-            from app.models import FormTemplate
-            form_templates = db.query(FormTemplate).all()
-            form_template_ids = [ft.id for ft in form_templates]
-            
-            cache.warmup_cache(db, form_template_ids)
-            templates_synced = len(form_template_ids)
-        finally:
-            db.close()
-        
-        stats_after = cache.get_cache_stats()
-        
-        return {
-            "message": "Form template cache synced successfully",
-            "stats_before": stats_before,
-            "stats_after": stats_after,
-            "templates_synced": templates_synced
-        }
-    except Exception as e:
-        logger.error(f"Failed to sync cache: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to sync cache: {str(e)}"
-        )
-
-
-@router.get("/cache/stats")
-async def get_cache_stats():
-    """Get current cache statistics"""
-    try:
-        stats = cache.get_cache_stats()
-        return {
-            "message": "Cache statistics retrieved successfully",
-            "stats": stats
-        }
-    except Exception as e:
-        logger.error(f"Failed to get cache stats: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get cache stats: {str(e)}"
         )
