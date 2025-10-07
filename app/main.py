@@ -8,10 +8,12 @@ from app.documents.router import router as documents_router
 from app.workflow.router import router as workflow_router
 from app.clients.router import router as clients_router
 from app.wages.router import router as wages_router
+from app.cache import router as cache_router
 
 API_VERSION = "0.1.1"
 
-app = FastAPI(title="Crossing Legal AI API", description="", version=API_VERSION)
+app = FastAPI(title="Crossing Legal AI API",
+              description="", version=API_VERSION)
 
 app.add_middleware(ProxyHeadersMiddleware)
 
@@ -47,6 +49,8 @@ app.include_router(
     prefix="/projects/{project_public_id}/wages",
     tags=["wages"],
 )
+app.include_router(cache_router.router,
+                   prefix="/system/cache", tags=["system"])
 
 
 @app.get("/")

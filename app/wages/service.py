@@ -4,6 +4,8 @@ from fastapi import HTTPException
 from pypdf import PdfReader
 from app.documents.service import get_document_blob
 from app.documents.storage import S3_BUCKET
+import app.forms.service as form_service
+
 from app.models import (
     FormTemplate,
     FormTemplateField,
@@ -23,7 +25,6 @@ from app.schemas import WageTierLevelPublic, WageTierPublic
 import logging
 
 from app.wages.onet_classifier_service import onet_classifier_service
-from app.workflow.service import complete_workflow_steps
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -36,7 +37,7 @@ async def get_tiers_from_current_project_state(
     print("--> Getting tiers from current project state")
 
     # get the current response for the beneficiary zip code field in the I-129 form for the project
-    zip_code = await get_zip_code_from_project_form(
+    zip_code = await form_service.get_response_value_from_project_form(
         db=db,
         project=project,
         form_template_name="I-129",
@@ -48,30 +49,36 @@ async def get_tiers_from_current_project_state(
             status_code=404, detail="Beneficiary zip code field not found"
         )
 
-    soc_code = None
+    print("--> Zip code", zip_code)
 
-    if S3_STORAGE:
-        # find the current job description document
-        job_description_document = (
-            await get_job_description_document_from_document_type(
-                db=db, project=project, document_type_code="employment_letter"
-            )
-        )
+    # get the current annual salary from the project form
+    annual_salary = await form_service.get_response_value_from_project_form(
+        db=db,
+        project=project,
+        form_template_name="I-129",
+        field_key="Job.Salary.Annual",
+    )
 
-        file_url = f"https://{S3_BUCKET}.s3.amazonaws.com/documents/{project.client.public_id}/{project.public_id}/uploads/{job_description_document.public_id}"
-        print("--> File url", file_url)
+    try:
+        annual_salary = int(annual_salary)
+    except (TypeError, ValueError):
+        annual_salary = None
 
-        # infer the SOC code from the job description
-        soc_code = await onet_classifier_service.infer_soc_code_from_document(
-            file_url=file_url
-        )
-    else:
-        job_description = await get_job_description_from_document_type(
-            db=db, project=project, document_type_code="employment_letter"
-        )
-        soc_code = await onet_classifier_service.infer_soc_code_from_text(
-            job_description=job_description
-        )
+    print("--> Annual salary", annual_salary)
+
+    job_description_document = await get_job_description_document_from_document_type(
+        db=db,
+        project=project,
+        document_type_code="employment_letter",
+    )
+
+    print("--> Job description document", job_description_document)
+
+    soc_code = await get_soc_code_from_document(
+        db=db,
+        project=project,
+        job_description_document=job_description_document,
+    )
 
     print("--> Soc code", soc_code)
 
@@ -90,7 +97,22 @@ async def get_tiers_from_current_project_state(
     # finally get the tiers for the SOC code via db lookup
     tiers = await get_tiers_by_zip_and_soc(db=db, zip_code=zip_code, soc_code=soc_code)
 
+    print("--> Annual salary", annual_salary)
+
+    if annual_salary:
+        lastIndex = -1
+
+        for index, tier in enumerate(tiers.levels):
+            if tier.wage < annual_salary:
+                lastIndex = index
+
+        if lastIndex > -1:
+            tiers.levels[lastIndex].selected = True
+
+    print("--> Tiers", tiers)
+
     # and mark the workflow steps as complete
+    # actually don't do this, wait for the user to click the Next button to complete the workflow steps
     """
     await complete_workflow_steps(
         db=db,
@@ -104,36 +126,6 @@ async def get_tiers_from_current_project_state(
     """
 
     return tiers
-
-
-async def get_zip_code_from_project_form(
-    *, db: DBSession, project: Project, form_template_name: str, field_key: str
-) -> str:
-    # get the current response for the beneficiary zip code field in the I-129 form for the project
-    print("--> Getting zip code from project form")
-
-    zip_code_response = (
-        db.query(FormFieldResponse)
-        .join(Form, FormFieldResponse.form_id == Form.id)
-        .join(FormTemplate, Form.form_template_id == FormTemplate.id)
-        .join(
-            FormTemplateField,
-            FormFieldResponse.form_template_field_id == FormTemplateField.id,
-        )
-        .filter(
-            Form.project_id == project.id,
-            FormTemplate.name == form_template_name,
-            FormTemplateField.key == field_key,
-        )
-        .first()
-    )
-
-    print("--> Zip code response", zip_code_response)
-
-    if not zip_code_response:
-        return None
-
-    return zip_code_response.value
 
 
 async def get_job_description_document_from_document_type(
@@ -209,6 +201,37 @@ async def get_job_description_from_document_type(
         return "Error: Could not extract text from PDF"
 
 
+async def get_soc_code_from_document(
+    *, db: DBSession, project: Project, job_description_document: Document
+) -> str:
+    if S3_STORAGE == "True":
+        # find the current job description document
+        job_description_document = (
+            await get_job_description_document_from_document_type(
+                db=db, project=project, document_type_code="employment_letter"
+            )
+        )
+
+        file_url = f"https://{S3_BUCKET}.s3.amazonaws.com/documents/{project.client.public_id}/{project.public_id}/uploads/{job_description_document.public_id}"
+        print("--> File url", file_url)
+
+        # infer the SOC code from the job description
+        soc_code = await onet_classifier_service.infer_soc_code_from_document(
+            file_url=file_url
+        )
+
+        return soc_code
+    else:
+        job_description = await get_job_description_from_document_type(
+            db=db, project=project, document_type_code="employment_letter"
+        )
+        soc_code = await onet_classifier_service.infer_soc_code_from_text(
+            job_description=job_description
+        )
+
+        return soc_code
+
+
 async def get_tiers_by_zip_and_soc(
     *, db: DBSession, zip_code: str, soc_code: str
 ) -> WageTierPublic:
@@ -229,10 +252,10 @@ async def get_tiers_by_zip_and_soc(
     area_job, area, job = row
 
     levels = [
-        WageTierLevelPublic(level=1, wage=float(area_job.wage_tier_1)),
-        WageTierLevelPublic(level=2, wage=float(area_job.wage_tier_2)),
-        WageTierLevelPublic(level=3, wage=float(area_job.wage_tier_3)),
-        WageTierLevelPublic(level=4, wage=float(area_job.wage_tier_4)),
+        WageTierLevelPublic(level=1, wage=float(area_job.wage_tier_1), selected=False),
+        WageTierLevelPublic(level=2, wage=float(area_job.wage_tier_2), selected=False),
+        WageTierLevelPublic(level=3, wage=float(area_job.wage_tier_3), selected=False),
+        WageTierLevelPublic(level=4, wage=float(area_job.wage_tier_4), selected=False),
     ]
 
     return WageTierPublic(

@@ -73,15 +73,18 @@ VALUES
 (21, now(), now(), NULL, 'POC Middle Name', NULL, NULL, 't', 'TEXT', NULL, 'Capture only; no direct PDF field in template', NULL, NULL, NULL, 2, 21, 'Employer.POC.MiddleName', 't', NULL, NULL),
 
 -- Job: Location where beneficiary will work (Part 5, Q3 Address 1)
-(22, now(), now(), NULL, 'Job location street number and name', 'P5Line3a_StreetNumberName', '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 24, 'Job.Location.Address1.StreetNumberName', 'f', NULL, NULL),
-(23, now(), now(), NULL, 'Job location city',                  'P5Line3a_CityTown',        '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 25, 'Job.Location.Address1.City', 'f', NULL, NULL),
-(24, now(), now(), NULL, 'Job location state',                 'P5Line3a_State',           '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 26, 'Job.Location.Address1.State', 'f', NULL, 'US_STATE'),
-(25, now(), now(), NULL, 'Job location ZIP code',              'P5Line3a_ZipCode',         '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 27, 'Job.Location.Address1.ZIP', 'f', NULL, 'ZIP_CODE'),
+(22, now(), now(), NULL, 'Job location street number and name', 'P5Line3a_StreetNumberName', '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 25, 'Job.Location.Address1.StreetNumberName', 'f', NULL, NULL),
+(23, now(), now(), NULL, 'Job location city',                  'P5Line3a_CityTown',        '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 26, 'Job.Location.Address1.City', 'f', NULL, NULL),
+(24, now(), now(), NULL, 'Job location state',                 'P5Line3a_State',           '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 27, 'Job.Location.Address1.State', 'f', NULL, 'US_STATE'),
+(25, now(), now(), NULL, 'Job location ZIP code',              'P5Line3a_ZipCode',         '({Job.OffsiteWork} == ''Yes'') && ({Job.Location.UseHomeAddress} == ''No'')', 't', 'TEXT', NULL, NULL, NULL, NULL, NULL, 3, 28, 'Job.Location.Address1.ZIP', 'f', NULL, 'ZIP_CODE'),
 
-(26, now(), now(), NULL, 'Work offsite or from home?', NULL, NULL, 't', 'SELECT_ONE', NULL, 'Part 5 Q5 (offsite or remote/home)', NULL, NULL, NULL, 3, 22, 'Job.OffsiteWork', 'f', NULL, NULL),
+(26, now(), now(), NULL, 'Work offsite or from home?', NULL, NULL, 't', 'SELECT_ONE', NULL, 'Part 5 Q5 (offsite or remote/home)', NULL, NULL, NULL, 3, 23, 'Job.OffsiteWork', 'f', NULL, NULL),
 
 -- Job: If offsite/remote, decide whether to reuse home address for work location
-(29, now(), now(), NULL, 'Use home address for work location?', NULL, '{Job.OffsiteWork} == ''Yes''', 't', 'SELECT_ONE', NULL, 'If Yes, we will reuse the beneficiary''s U.S. address for the job location', NULL, NULL, NULL, 3, 23, 'Job.Location.UseHomeAddress', 'f', 'limit-1', NULL);
+(29, now(), now(), NULL, 'Use home address for work location?', NULL, '{Job.OffsiteWork} == ''Yes''', 't', 'SELECT_ONE', NULL, 'If Yes, we will reuse the beneficiary''s U.S. address for the job location', NULL, NULL, NULL, 3, 24, 'Job.Location.UseHomeAddress', 'f', 'limit-1', NULL);
+
+-- Job: Annual salary 
+(30, '2025-10-03 13:38:44.113447-05', '2025-10-03 13:38:44.113447-05', NULL, 'Annual salary', NULL, NULL, 't', 'NUMBER', NULL, NULL, NULL, NULL, NULL, 3, 22, 'Job.Salary.Annual', 'f', 'limit-1', NULL);
 
 -- Options for SELECT_ONE fields
 INSERT INTO "public"."form_template_field_option" ("id", "created_at", "updated_at", "deleted_at", "key", "pdf_field_name", "name", "field_id") VALUES

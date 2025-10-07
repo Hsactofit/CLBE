@@ -29,3 +29,17 @@ async def complete_workflow_step(
         workflow_step_key=workflow_step_key,
     )
     return WorkflowStepsPublic(steps=steps)
+
+
+@router.post("/evaluate", response_model=dict)
+async def evaluate_workflow(
+    project_state: ProjectState = Depends(get_project_state),
+):
+    """Manually trigger workflow evaluation (for testing/debugging)"""
+    from app.workflow.workflow_evaluator import evaluate_workflow_completion
+
+    result = await evaluate_workflow_completion(
+        db=project_state.db,
+        project=project_state.project
+    )
+    return result

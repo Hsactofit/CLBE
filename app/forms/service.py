@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import and_
 from app.models import (
     Form,
+    FormTemplate,
     FormTemplateSection,
     FormFieldResponse,
     FormFieldResponseRole,
@@ -103,9 +104,9 @@ async def get_section_fields(
 
     # Get all field options for fields in this section
     template_data = cache.get_section_template_data(db, section.id)
-    template_fields = template_data['fields']
+    template_fields = template_data["fields"]
     options_dict = defaultdict(list)
-    for field_id, field_options in template_data['options'].items():
+    for field_id, field_options in template_data["options"].items():
         for option in field_options:
             options_dict[field_id].append(option)
 
@@ -120,11 +121,11 @@ async def get_section_fields(
             db.query(FormFieldResponse)
             .filter(
                 FormFieldResponse.form_id == form.id,
-                FormFieldResponse.form_template_field_id == field_id
+                FormFieldResponse.form_template_field_id == field_id,
             )
             .first()
         )
-        
+
         should_show = True
         if template_field.dependency_expression:
             should_show = check_dependency(
@@ -191,7 +192,7 @@ async def submit_section_responses(
         # Process each field response
         template_fields = cache.get_template_fields_for_section(db, section.id)
         fields_by_key = {field.key: field for field in template_fields.values()}
-        
+
         for request_field_response in response_request.fields:
             logger.info(
                 f"Filling field: {request_field_response.key} with value: {request_field_response.value}"
@@ -203,7 +204,7 @@ async def submit_section_responses(
 
             # Check if this field is in the template
             template_field = fields_by_key.get(request_field_response.key)
-            
+
             if not template_field:
                 logger.warning(
                     f"Field {request_field_response.key} not found in template"
@@ -233,6 +234,17 @@ async def submit_section_responses(
                 db_field_response.role = request_field_response.role
 
         db.commit()
+
+        # *** AUTOMATIC WORKFLOW EVALUATION ***
+        logger.info("Triggering workflow evaluation after section submission")
+        from app.workflow.workflow_evaluator import evaluate_workflow_completion
+
+        try:
+            await evaluate_workflow_completion(db=db, project=project)
+        except Exception as eval_error:
+            logger.error(f"Workflow evaluation failed: {eval_error}")
+            # Don't fail the section submission if evaluation fails
+
         return {"message": "Section responses submitted successfully"}
 
     except Exception:
@@ -282,3 +294,28 @@ async def generate_pdf_bytes(
         except Exception:
             raise
     raise ValueError("PDF Filler is not supported for this form")
+
+
+async def get_response_value_from_project_form(
+    *, db: DBSession, project: Project, form_template_name: str, field_key: str
+) -> str:
+    response = (
+        db.query(FormFieldResponse)
+        .join(Form, FormFieldResponse.form_id == Form.id)
+        .join(FormTemplate, Form.form_template_id == FormTemplate.id)
+        .join(
+            FormTemplateField,
+            FormFieldResponse.form_template_field_id == FormTemplateField.id,
+        )
+        .filter(
+            Form.project_id == project.id,
+            FormTemplate.name == form_template_name,
+            FormTemplateField.key == field_key,
+        )
+        .first()
+    )
+
+    if not response:
+        return None
+
+    return response.value

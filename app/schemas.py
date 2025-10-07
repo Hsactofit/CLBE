@@ -298,6 +298,7 @@ class SectionFieldsPublic(SectionPublic):
 class WageTierLevelPublic(CamelModel):
     level: int = Field(..., description="Wage tier level")
     wage: float = Field(..., description="Wage")
+    selected: bool = Field(..., description="Selected")
 
 
 class WageTierLevelsPublic(CamelModel):

@@ -87,13 +87,41 @@ async def list_workflow_steps(
 async def complete_workflow_step(
     *, db: DBSession, project: Project, workflow_step_key: str
 ) -> list[WorkflowStepPublic]:
+    # Find the workflow step and its children
+    workflow_step = (
+        db.query(WorkflowStep).filter(WorkflowStep.key == workflow_step_key).first()
+    )
+
+    if not workflow_step:
+        raise ValueError(f"No workflow step found with key {workflow_step.key}")
+
+    child_workflow_steps = (
+        db.query(WorkflowStep)
+        .filter(WorkflowStep.parent_step_id == workflow_step.id)
+        .all()
+    )
+
+    child_keys = [child.key for child in child_workflow_steps if child.key]
+
+    # Collect all keys to complete (parent + children)
+    all_keys_to_complete = [workflow_step.key] + child_keys
+
+    # Add child step keys if they exist
+    if child_workflow_steps:
+        logger.info(
+            f"Completing parent step '{workflow_step.key}' and child steps: {child_keys}"
+        )
+
+    else:
+        logger.info(f"Completing step '{workflow_step.key}' (no children)")
+
     return await complete_workflow_steps(
-        db=db, project=project, workflow_step_keys=[workflow_step_key]
+        db=db, project=project, workflow_step_keys=all_keys_to_complete
     )
 
 
 async def complete_workflow_steps(
-    *, db: DBSession, project: Project, workflow_step_keys: list[str]
+    *, db: DBSession, project: Project, workflow_step_keys: list[int]
 ) -> list[WorkflowStepPublic]:
     """Complete a workflow step"""
     now = datetime.datetime.now(datetime.timezone.utc)
