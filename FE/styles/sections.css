@@ -1,0 +1,47 @@
+/* Page-specific styles for the form sections page (global import).
+   These class names remain stable so backend-provided strings can apply. */
+
+/* Master field card container */
+
+.field-card {
+  padding-bottom: 40px;
+ 
+}
+
+.cloud-blue {
+  background: linear-gradient(180deg, #f5fbff 0%, #eaf5ff 100%);
+  border: 1px solid #d6eaff;
+  border-radius: 8px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 20px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.cloud-blue > div
+{
+  padding-left:20px;
+}
+
+.legal-yellow {
+  background: linear-gradient(180deg, #fff8e6 0%, #fff1cc 100%);
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+
+.limit-1 {
+  margin-right: 75%;
+} 
+
+.limit-2 {
+  margin-right: 50%;
+} 
+
+.limit-3 {
+  margin-right: 25%;
+} 
+
+.limit-4 {
+  margin-right: 0%;
+} 

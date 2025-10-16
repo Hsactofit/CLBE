@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide browser's default calendar picker indicator for date inputs */
+.hide-calendar-icon::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.hide-calendar-icon::-webkit-inner-spin-button,
+.hide-calendar-icon::-webkit-outer-spin-button {
+  display: none !important;
+}
+
+.hide-calendar-icon::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+/* Hide extra text of selected element */
+.ant-select-selection-item :nth-child(1) :nth-child(2) {
+  display: none;
+}
+html {
+  font-family: Inter !important;
+}
+
+.ant-upload {
+  padding: 60px;
+}
+
+.ant-typography {
+  font-family: Inter;
+}
+
+.ant-upload-text {
+  font-size: 22px !important;
+  font-weight: 600;
+}
+
+.ant-upload-hint {
+  font-size: 12px;
+}

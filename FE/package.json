@@ -1,0 +1,50 @@
+{
+  "name": "crossing-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "kill-port 3000 && next dev & sleep 1 && open-cli http://localhost:3000",
+    "dev:3001": "kill-port 3001 && next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@ant-design/colors": "^7.2.1",
+    "@ant-design/icons": "5.x",
+    "@clerk/nextjs": "^4.31.8",
+    "@fortawesome/fontawesome-free": "^7.0.0",
+    "@hookform/resolvers": "^5.2.1",
+    "antd": "^5.27.1",
+    "framer-motion": "^12.23.12",
+    "lucide-react": "^0.539.0",
+    "next": "^15.5.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-hook-form": "^7.62.0",
+    "react-input-mask": "^3.0.0-alpha.2",
+    "react-number-format": "^5.3.4",
+    "yup": "^1.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
+    "@types/react-input-mask": "^3.0.6",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.2",
+    "kill-port": "^2.0.1",
+    "open-cli": "^8.0.0",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.3.3"
+  },
+  "overrides": {
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9"
+  }
+}
