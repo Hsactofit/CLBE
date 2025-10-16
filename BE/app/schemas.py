@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime, date
-from typing import List
+from typing import List, Optional
 from app.models import (
     FormTemplateFieldSubTypes,
     FormTemplateFieldTypes,
@@ -317,3 +317,16 @@ class WageTierPublic(CamelModel):
     job_code: str | None = Field(None, description="SOC/OES code")
     job_name: str | None = Field(None, description="Job name")
     job_description: str | None = Field(None, description="Job description")
+
+class WorkflowStepSchema(BaseModel):
+    id: int
+    name: str
+    key: Optional[str]
+    description: Optional[str]
+    icon: Optional[str]
+    estimated_duration_min: Optional[int]  # 👈 ADD
+    estimated_duration_max: Optional[int]  # 👈 ADD
+    sequence: int
+
+    class Config:
+        from_attributes = True

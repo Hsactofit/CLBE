@@ -17,8 +17,11 @@ from app.models import (
     Document,
     DocumentType,
     ProjectWorkflowStep,
+    ProjectDetailType
 )
 from app.forms import service as form_service
+from app.projects.project_detail_service import get_project_detail 
+from typing import Optional
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -27,10 +30,11 @@ async def evaluate_workflow_completion(*, db: DBSession, project: Project) -> di
     """
     Evaluate and complete workflow steps based on current project state.
 
-    This function:
+   This function:
     1. Evaluates form section completion for H1B_INFORMATION_COLLECTION child steps
     2. Evaluates document gathering completion
-    3. Marks parent steps complete if all children are complete
+    3. Evaluates wage determination completion 
+    4. Marks parent steps complete if all children are complete 
 
     Returns a dict with completed step keys
     """
@@ -57,6 +61,11 @@ async def evaluate_workflow_completion(*, db: DBSession, project: Project) -> di
     if document_completion:
         completed_step_keys.append(document_completion)
 
+    # Evaluate wage determination completion
+    wage_completion = await _evaluate_wage_determination_completion(db=db, project=project)
+    if wage_completion:
+        completed_step_keys.append(wage_completion)
+    
     # Evaluate parent step completion (must be done after child steps)
     parent_completions = await _evaluate_parent_step_completion(db=db, project=project)
     completed_step_keys.extend(parent_completions)
@@ -272,6 +281,23 @@ async def _evaluate_document_completion(
         missing_names = [dt.name for dt in missing_types]
         logger.info(f"Project {project.id} missing required documents: {missing_names}")
         return None
+
+
+async def _evaluate_wage_determination_completion(
+    *, db: DBSession, project: Project
+) -> Optional[str]:
+    """
+    Check if wage determination step is complete by checking cache.
+    """
+    soc_code = get_project_detail(db, project.id, ProjectDetailType.SOC_CODE)
+    wage_tiers = get_project_detail(
+        db, project.id, ProjectDetailType.WAGE_TIERS, as_json=True)
+
+    if soc_code and wage_tiers:
+        logger.info(f"Wage determination complete for project {project.id}")
+        return "H1B_WAGE_DETERMINATION"
+
+    return None
 
 
 async def _evaluate_parent_step_completion(

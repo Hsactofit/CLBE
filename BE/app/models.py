@@ -32,6 +32,10 @@ class UserRole(Enum):
     CLIENT = "CLIENT"
 
 
+class ProjectDetailType(Enum):
+    """Types of project-specific details"""
+    SOC_CODE = "SOC_CODE"
+    WAGE_TIERS = "WAGE_TIERS"
 class User(Base):
     __tablename__ = "user"
 
@@ -233,7 +237,63 @@ class Project(Base):
     workflow_steps: Mapped[List["ProjectWorkflowStep"]] = relationship(
         back_populates="project"
     )
+    details: Mapped[List["ProjectDetail"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
 
+class ProjectDetail(Base):
+    """
+    Stores project-specific data points that don't fit in the normalized schema.
+    Used for caching computed values like wage determinations for H-1B projects.
+    """
+    __tablename__ = "project_detail"
+
+    # Internal ID for database operations
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True)
+
+    # Public UUID for external references
+    public_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+        unique=True,
+        index=True,
+    )
+
+    # Foreign key to project
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    project: Mapped["Project"] = relationship(back_populates="details")
+
+    # Detail type and value
+    type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False
+    )
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Timestamps
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=text("now()")
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=text("now()"),
+        onupdate=text("now()")
+    )
+
+    # Ensure one detail per type per project
+    __table_args__ = (
+        UniqueConstraint('project_id', 'type',
+                         name='uq_project_detail_project_type'),
+    )
 
 @dataclass
 class ProjectState:
@@ -625,6 +685,8 @@ class WorkflowStep(Base):
     key: Mapped[str] = mapped_column(String(255), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     icon: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    estimated_duration_min: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    estimated_duration_max: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     parent_step_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("workflow_step.id"), nullable=True
     )
